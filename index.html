@@ -70,8 +70,8 @@
             <div class="flex items-center gap-4">
                 <!-- YENİ: Filtreler -->
                 <div class="flex items-center gap-2">
-                    <select id="monthFilter" class="text-sm border-gray-300 text-gray-600 bg-white rounded px-2 py-1 cursor-pointer focus:ring-1 focus:ring-brand outline-none">
-                        <option value="all">Tüm Yıl</option>
+                    <select id="monthFilter" multiple size="6" class="text-sm border-gray-300 text-gray-600 bg-white rounded px-2 py-1 cursor-pointer focus:ring-1 focus:ring-brand outline-none min-w-[9rem]">
+                        <option value="all" selected>Tüm Yıl</option>
                         <option value="0">Ocak</option>
                         <option value="1">Şubat</option>
                         <option value="2">Mart</option>
@@ -406,13 +406,13 @@
                     return;
                 }
 
-                const selectedMonth = document.getElementById('monthFilter').value;
+                const selectedMonths = getSelectedMonths();
                 const selectedChannel = document.getElementById('channelFilter').value;
 
                 // Ham veriyi filtrelere göre işle
                 const processedData = processData(
                     rawExcelData,
-                    selectedMonth,
+                    selectedMonths,
                     selectedChannel
                 );
 
@@ -420,6 +420,52 @@
                 if (processedData) {
                     updateDashboard(processedData);
                 }
+            }
+
+            function getSelectedMonths() {
+                const monthSelect = document.getElementById('monthFilter');
+                if (!monthSelect) {
+                    return 'all';
+                }
+
+                const selectedValues = Array.from(monthSelect.selectedOptions).map(
+                    (option) => option.value
+                );
+
+                if (selectedValues.length === 0) {
+                    const allOption = Array.from(monthSelect.options).find(
+                        (option) => option.value === 'all'
+                    );
+                    if (allOption) {
+                        allOption.selected = true;
+                    }
+                    return 'all';
+                }
+
+                if (selectedValues.includes('all')) {
+                    return 'all';
+                }
+
+                return selectedValues.map((value) => Number(value));
+            }
+
+            function handleMonthFilterChange(event) {
+                const select = event.target;
+                const selectedValues = Array.from(select.selectedOptions).map(
+                    (option) => option.value
+                );
+
+                if (selectedValues.includes('all') && selectedValues.length > 1) {
+                    Array.from(select.options).forEach((option) => {
+                        option.selected = option.value === 'all';
+                    });
+                } else if (selectedValues.length === 0) {
+                    Array.from(select.options).forEach((option) => {
+                        option.selected = option.value === 'all';
+                    });
+                }
+
+                masterRender();
             }
 
             // Excel tarih (serial) veya string'i JS Date'e çeviren helper
@@ -481,7 +527,11 @@
                     // Ay Filtresi (AG sütunu, index 32)
                     if (monthFilter !== 'all') {
                         const date = parseDate(row[32]);
-                        if (!date || date.getMonth() != monthFilter) {
+                        if (!date) {
+                            return false;
+                        }
+                        const month = date.getMonth();
+                        if (!Array.isArray(monthFilter) || !monthFilter.includes(month)) {
                             return false;
                         }
                     }
@@ -1050,7 +1100,7 @@
                 // Filtreler
                 document
                     .getElementById('monthFilter')
-                    .addEventListener('change', masterRender);
+                    .addEventListener('change', handleMonthFilterChange);
                 document
                     .getElementById('channelFilter')
                     .addEventListener('change', masterRender);
