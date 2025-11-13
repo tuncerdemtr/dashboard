@@ -130,83 +130,6 @@
             <div class="flex items-center gap-4">
                 <!-- YENİ: Filtreler -->
                 <div class="flex items-center gap-3">
-                    <div id="monthFilterWrapper" class="relative">
-                        <button id="monthFilterToggle" type="button" class="flex items-center justify-between gap-3 text-sm border border-transparent text-[#4b4872] bg-white/70 rounded-2xl px-3 py-2 min-w-[9rem] shadow-inner hover:shadow-md transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-brand/60 focus:border-brand/40" aria-haspopup="listbox" aria-expanded="false">
-                            <span id="monthFilterLabel" class="truncate">Tüm Yıl</span>
-                            <i id="monthFilterCaret" class="ph ph-caret-down text-base text-brand-dark/70 transition-transform duration-200"></i>
-                        </button>
-                        <div id="monthFilterDropdown" class="absolute right-0 mt-2 w-56 glass-card py-3 px-2 text-sm text-[#4b4872] shadow-2xl hidden">
-                            <div class="max-h-60 overflow-y-auto space-y-1">
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Tüm Yıl</span>
-                                    <input type="checkbox" value="all" class="month-filter-option accent-brand" checked>
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Ocak</span>
-                                    <input type="checkbox" value="0" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Şubat</span>
-                                    <input type="checkbox" value="1" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Mart</span>
-                                    <input type="checkbox" value="2" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Nisan</span>
-                                    <input type="checkbox" value="3" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Mayıs</span>
-                                    <input type="checkbox" value="4" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Haziran</span>
-                                    <input type="checkbox" value="5" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Temmuz</span>
-                                    <input type="checkbox" value="6" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Ağustos</span>
-                                    <input type="checkbox" value="7" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Eylül</span>
-                                    <input type="checkbox" value="8" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Ekim</span>
-                                    <input type="checkbox" value="9" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Kasım</span>
-                                    <input type="checkbox" value="10" class="month-filter-option accent-brand">
-                                </label>
-                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
-                                    <span>Aralık</span>
-                                    <input type="checkbox" value="11" class="month-filter-option accent-brand">
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <select id="monthFilter" multiple size="6" class="text-sm border-transparent text-[#4b4872] bg-white/70 rounded-2xl px-3 py-2 cursor-pointer focus:ring-2 focus:ring-brand/60 focus:border-brand/40 outline-none min-w-[9rem] shadow-inner">
-                        <option value="all" selected>Tüm Yıl</option>
-                        <option value="0">Ocak</option>
-                        <option value="1">Şubat</option>
-                        <option value="2">Mart</option>
-                        <option value="3">Nisan</option>
-                        <option value="4">Mayıs</option>
-                        <option value="5">Haziran</option>
-                        <option value="6">Temmuz</option>
-                        <option value="7">Ağustos</option>
-                        <option value="8">Eylül</option>
-                        <option value="9">Ekim</option>
-                        <option value="10">Kasım</option>
-                        <option value="11">Aralık</option>
-                    </select>
                     <select id="channelFilter" class="text-sm border-transparent text-[#4b4872] bg-white/70 rounded-2xl px-3 py-2 cursor-pointer focus:ring-2 focus:ring-brand/60 focus:border-brand/40 outline-none shadow-inner">
                         <option value="all">Tüm Kanallar</option>
                         <option value="Bayi">Bayi</option>
@@ -545,13 +468,11 @@
                     return;
                 }
 
-                const selectedMonths = getSelectedMonths();
                 const selectedChannel = document.getElementById('channelFilter').value;
 
                 // Ham veriyi filtrelere göre işle
                 const processedData = processData(
                     rawExcelData,
-                    selectedMonths,
                     selectedChannel
                 );
 
@@ -559,103 +480,6 @@
                 if (processedData) {
                     updateDashboard(processedData);
                 }
-            }
-
-            function getMonthCheckboxes() {
-                return document.querySelectorAll('.month-filter-option');
-            }
-
-            function setMonthDropdownState(isOpen) {
-                const dropdown = document.getElementById('monthFilterDropdown');
-                const toggle = document.getElementById('monthFilterToggle');
-                const caret = document.getElementById('monthFilterCaret');
-
-                if (!dropdown || !toggle) return;
-
-                if (isOpen) {
-                    dropdown.classList.remove('hidden');
-                    toggle.setAttribute('aria-expanded', 'true');
-                    if (caret) caret.classList.add('rotate-180');
-                } else {
-                    dropdown.classList.add('hidden');
-                    toggle.setAttribute('aria-expanded', 'false');
-                    if (caret) caret.classList.remove('rotate-180');
-                }
-            }
-
-            function updateMonthFilterLabel() {
-                const labelEl = document.getElementById('monthFilterLabel');
-                if (!labelEl) return;
-
-                const checkedOptions = Array.from(getMonthCheckboxes()).filter(
-                    (checkbox) => checkbox.checked
-                );
-
-                if (
-                    checkedOptions.length === 0 ||
-                    checkedOptions.some((checkbox) => checkbox.value === 'all')
-                ) {
-                    labelEl.textContent = 'Tüm Yıl';
-                    return;
-                }
-
-                if (checkedOptions.length === 1) {
-                    const singleValue = Number(checkedOptions[0].value);
-                    labelEl.textContent = monthNames[singleValue] || '1 Ay';
-                    return;
-                }
-
-                labelEl.textContent = `${checkedOptions.length} Ay`;
-            }
-
-            function getSelectedMonths() {
-                const selectedValues = Array.from(getMonthCheckboxes())
-                    .filter((checkbox) => checkbox.checked)
-                    .map((checkbox) => checkbox.value);
-
-                if (selectedValues.length === 0 || selectedValues.includes('all')) {
-                    return 'all';
-                }
-
-                return selectedValues.map((value) => Number(value));
-            }
-
-            function handleMonthFilterChange(event) {
-                const checkboxes = Array.from(getMonthCheckboxes());
-                if (checkboxes.length === 0) {
-                    masterRender();
-                    return;
-                }
-
-                const changed = event.target;
-                const allCheckbox = checkboxes.find(
-                    (checkbox) => checkbox.value === 'all'
-                );
-
-                if (changed.value === 'all') {
-                    if (changed.checked) {
-                        checkboxes
-                            .filter((checkbox) => checkbox.value !== 'all')
-                            .forEach((checkbox) => (checkbox.checked = false));
-                    } else {
-                        changed.checked = true;
-                    }
-                } else {
-                    if (changed.checked && allCheckbox) {
-                        allCheckbox.checked = false;
-                    }
-
-                    const hasMonthSelected = checkboxes.some(
-                        (checkbox) => checkbox.value !== 'all' && checkbox.checked
-                    );
-
-                    if (!hasMonthSelected && allCheckbox) {
-                        allCheckbox.checked = true;
-                    }
-                }
-
-                updateMonthFilterLabel();
-                masterRender();
             }
 
             // Excel tarih (serial) veya string'i JS Date'e çeviren helper
@@ -703,7 +527,7 @@
              * AK (36): BK (Brüt Kâr)
              * AP (41): Maliyet (Cost)
              */
-            function processData(allRows, monthFilter, channelFilter) {
+            function processData(allRows, channelFilter) {
                 // 1. FİLTRELEME AŞAMASI
                 const rows = allRows.filter((row) => {
                     if (!row) return false;
@@ -712,18 +536,6 @@
                     const type = row[4];
                     if (type !== 'Mutfak' && type !== 'Ek Sipariş') {
                         return false;
-                    }
-
-                    // Ay Filtresi (AG sütunu, index 32)
-                    if (monthFilter !== 'all') {
-                        const date = parseDate(row[32]);
-                        if (!date) {
-                            return false;
-                        }
-                        const month = date.getMonth();
-                        if (!Array.isArray(monthFilter) || !monthFilter.includes(month)) {
-                            return false;
-                        }
                     }
 
                     // Kanal Filtresi (F sütunu, index 5)
@@ -1297,40 +1109,6 @@
                     .addEventListener('click', handleFileUpload);
 
                 // Filtreler
-                const monthFilterWrapper = document.getElementById('monthFilterWrapper');
-                const monthFilterToggle = document.getElementById('monthFilterToggle');
-                const monthFilterDropdown = document.getElementById('monthFilterDropdown');
-
-                if (monthFilterToggle && monthFilterDropdown && monthFilterWrapper) {
-                    monthFilterToggle.addEventListener('click', (event) => {
-                        event.stopPropagation();
-                        const shouldOpen = monthFilterDropdown.classList.contains('hidden');
-                        setMonthDropdownState(shouldOpen);
-                    });
-
-                    monthFilterDropdown.addEventListener('click', (event) => {
-                        event.stopPropagation();
-                    });
-
-                    document.addEventListener('click', (event) => {
-                        if (!monthFilterWrapper.contains(event.target)) {
-                            setMonthDropdownState(false);
-                        }
-                    });
-
-                    document.addEventListener('keydown', (event) => {
-                        if (event.key === 'Escape') {
-                            setMonthDropdownState(false);
-                        }
-                    });
-                }
-
-                getMonthCheckboxes().forEach((checkbox) => {
-                    checkbox.addEventListener('change', handleMonthFilterChange);
-                });
-
-                updateMonthFilterLabel();
-
                 document
                     .getElementById('channelFilter')
                     .addEventListener('change', masterRender);
