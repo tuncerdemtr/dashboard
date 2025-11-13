@@ -23,17 +23,72 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
+        :root {
+            color-scheme: light;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F3F4F6; /* Açık gri arka plan */
-            color: #1f2937;
+            background:
+                radial-gradient(1200px circle at -10% -20%, rgba(255, 187, 232, 0.45), transparent 55%),
+                radial-gradient(1000px circle at 110% -10%, rgba(108, 99, 255, 0.25), transparent 60%),
+                linear-gradient(180deg, #f7f8ff 0%, #eef1ff 45%, #fff2fc 100%);
+            color: #1b1f3b;
+            min-height: 100vh;
         }
-        
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 999px;
+            filter: blur(120px);
+            opacity: 0.55;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::before {
+            background: #c7b8ff;
+            top: -120px;
+            left: -160px;
+        }
+
+        body::after {
+            background: #ffb8d8;
+            bottom: -180px;
+            right: -140px;
+        }
+
         /* Chart.js Tooltip Customization Overrides */
         .chart-container {
             position: relative;
             height: 100%;
             width: 100%;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            border-radius: 28px;
+            box-shadow: 0 30px 65px -35px rgba(76, 62, 204, 0.45);
+            backdrop-filter: blur(22px);
+        }
+
+        .kpi-card {
+            border-radius: 30px;
+            box-shadow: 0 35px 65px -35px rgba(108, 99, 255, 0.55);
+            overflow: hidden;
+        }
+
+        .month-filter-option {
+            accent-color: #6C63FF;
+        }
+
+        #kpi-tooltip {
+            backdrop-filter: blur(18px);
         }
     </style>
     
@@ -44,10 +99,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            DEFAULT: '#5F6F52', // Zeytin Yeşili
-                            light: '#A9B388',
-                            dark: '#3E4A35',
-                            accent: '#FEFAE0'
+                            DEFAULT: '#6C63FF',
+                            light: '#8F7BFF',
+                            dark: '#4D46B5',
+                            accent: '#FF6B9A',
+                            soft: '#F4F6FF',
+                            highlight: '#FFC6E3'
                         }
                     }
                 }
@@ -55,37 +112,87 @@
         }
     </script>
 </head>
-<body class="antialiased min-h-screen pb-12">
+<body class="antialiased min-h-screen pb-12 relative text-[#1b1f3b]">
 
     <!-- YENİ: KPI Tooltip (Başlangıçta gizli) -->
-    <div id="kpi-tooltip" class="absolute z-30 hidden p-3 text-sm text-white bg-gray-900 rounded-md shadow-lg min-w-[200px]" style="pointer-events: none;"></div>
+    <div id="kpi-tooltip" class="absolute z-30 hidden p-4 text-sm text-white bg-[#201d3f]/90 border border-white/10 rounded-2xl shadow-2xl min-w-[220px]" style="pointer-events: none;"></div>
 
     <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-brand flex items-center justify-center text-white font-bold text-lg rounded-sm">M</div>
-                <h1 class="text-xl font-bold tracking-tight text-gray-900">Mutfak Markası <span class="font-normal text-gray-500 hidden sm:inline">| Satış Raporu</span></h1>
+    <header class="sticky top-0 z-20 bg-white/70 border-b border-white/20 backdrop-blur-xl shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-brand via-brand-light to-brand-accent flex items-center justify-center text-white font-semibold text-lg rounded-2xl shadow-lg">M</div>
+                <div>
+                    <h1 class="text-2xl font-semibold tracking-tight text-[#1d1745]">Mutfak Markası</h1>
+                    <p class="text-sm text-[#6e6a96]">Satış Performans Raporu</p>
+                </div>
             </div>
             <div class="flex items-center gap-4">
                 <!-- YENİ: Filtreler -->
-                <div class="flex items-center gap-2">
-                    <select id="monthFilter" multiple size="6" class="text-sm border-gray-300 text-gray-600 bg-white rounded px-2 py-1 cursor-pointer focus:ring-1 focus:ring-brand outline-none min-w-[9rem]">
-                        <option value="all" selected>Tüm Yıl</option>
-                        <option value="0">Ocak</option>
-                        <option value="1">Şubat</option>
-                        <option value="2">Mart</option>
-                        <option value="3">Nisan</option>
-                        <option value="4">Mayıs</option>
-                        <option value="5">Haziran</option>
-                        <option value="6">Temmuz</option>
-                        <option value="7">Ağustos</option>
-                        <option value="8">Eylül</option>
-                        <option value="9">Ekim</option>
-                        <option value="10">Kasım</option>
-                        <option value="11">Aralık</option>
-                    </select>
-                    <select id="channelFilter" class="text-sm border-gray-300 text-gray-600 bg-white rounded px-2 py-1 cursor-pointer focus:ring-1 focus:ring-brand outline-none">
+                <div class="flex items-center gap-3">
+                    <div id="monthFilterWrapper" class="relative">
+                        <button id="monthFilterToggle" type="button" class="flex items-center justify-between gap-3 text-sm border border-transparent text-[#4b4872] bg-white/70 rounded-2xl px-3 py-2 min-w-[9rem] shadow-inner hover:shadow-md transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-brand/60 focus:border-brand/40" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="monthFilterLabel" class="truncate">Tüm Yıl</span>
+                            <i id="monthFilterCaret" class="ph ph-caret-down text-base text-brand-dark/70 transition-transform duration-200"></i>
+                        </button>
+                        <div id="monthFilterDropdown" class="absolute right-0 mt-2 w-56 glass-card py-3 px-2 text-sm text-[#4b4872] shadow-2xl hidden">
+                            <div class="max-h-60 overflow-y-auto space-y-1">
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Tüm Yıl</span>
+                                    <input type="checkbox" value="all" class="month-filter-option accent-brand" checked>
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Ocak</span>
+                                    <input type="checkbox" value="0" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Şubat</span>
+                                    <input type="checkbox" value="1" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Mart</span>
+                                    <input type="checkbox" value="2" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Nisan</span>
+                                    <input type="checkbox" value="3" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Mayıs</span>
+                                    <input type="checkbox" value="4" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Haziran</span>
+                                    <input type="checkbox" value="5" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Temmuz</span>
+                                    <input type="checkbox" value="6" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Ağustos</span>
+                                    <input type="checkbox" value="7" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Eylül</span>
+                                    <input type="checkbox" value="8" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Ekim</span>
+                                    <input type="checkbox" value="9" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Kasım</span>
+                                    <input type="checkbox" value="10" class="month-filter-option accent-brand">
+                                </label>
+                                <label class="flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl hover:bg-brand/10 cursor-pointer select-none">
+                                    <span>Aralık</span>
+                                    <input type="checkbox" value="11" class="month-filter-option accent-brand">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <select id="channelFilter" class="text-sm border-transparent text-[#4b4872] bg-white/70 rounded-2xl px-3 py-2 cursor-pointer focus:ring-2 focus:ring-brand/60 focus:border-brand/40 outline-none shadow-inner">
                         <option value="all">Tüm Kanallar</option>
                         <option value="Bayi">Bayi</option>
                         <option value="İntema">İntema</option>
@@ -93,90 +200,93 @@
                 </div>
 
                 <!-- Dosya Yükleme Alanı -->
-                <div class="flex items-center gap-2 border-l pl-4 ml-2">
-                    <input type="file" id="fileUploader" accept=".xlsx, .xls, .csv" class="text-sm text-gray-500 w-full max-w-xs
-                                                                                          file:mr-2 file:py-1 file:px-2 
-                                                                                          file:rounded file:border-0 file:text-sm file:font-medium 
-                                                                                          file:bg-brand-light file:text-brand-dark 
+                <div class="flex items-center gap-3 border-l border-white/20 pl-4 ml-2">
+                    <input type="file" id="fileUploader" accept=".xlsx, .xls, .csv" class="text-sm text-gray-500 w-full max-w-xs                                                                                          file:mr-2 file:py-1 file:px-2
+                                                                                          file:rounded file:border-0 file:text-sm file:font-medium
+                                                                                          file:bg-brand-light file:text-brand-dark
                                                                                           hover:file:bg-brand hover:file:text-white file:transition-colors file:cursor-pointer">
-                    <button id="uploadButton" class="bg-brand hover:bg-brand-dark text-white px-3 py-1.5 rounded text-sm font-medium transition-colors">
+                    <button id="uploadButton" class="px-4 py-2 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-brand via-brand-light to-brand-accent shadow-[0_18px_38px_-18px_rgba(108,99,255,0.6)] hover:shadow-[0_24px_48px_-20px_rgba(255,107,154,0.55)] transition-all duration-200">
                         Yükle & Güncelle
                     </button>
                 </div>
-                <div class="text-sm text-gray-500 text-right hidden sm:block border-l pl-4 ml-2">
-                    <p class="text-xs">Veri Kaynağı</p>
-                    <span id="dataSource" class="font-medium text-gray-900">Mock Data</span>
+                <div class="text-sm text-[#6e6a96] text-right hidden sm:block border-l border-white/20 pl-4 ml-2">
+                    <p class="text-xs uppercase tracking-wide text-[#8b88ad]">Veri Kaynağı</p>
+                    <span id="dataSource" class="font-semibold text-[#332c6c]">Mock Data</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
 
         <!-- KPI Cards Section -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Card 1 (YENİ: ID eklendi) -->
-            <div id="kpi-gelir-card" class="bg-white p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-help">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-gray-50 rounded-full">
-                        <i class="ph ph-currency-tr text-xl text-gray-700"></i>
+            <div id="kpi-gelir-card" class="kpi-card bg-gradient-to-br from-brand via-brand-light to-brand-accent p-6 lg:p-7 text-white cursor-help relative overflow-hidden">
+                <span class="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-white/15 blur-3xl"></span>
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <div class="p-3 bg-white/15 rounded-2xl">
+                        <i class="ph ph-currency-tr text-2xl"></i>
                     </div>
-                    <span id="kpi-gelir-pct" class="flex items-center text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                    <span id="kpi-gelir-pct" class="flex items-center text-xs font-medium bg-white/15 px-3 py-1 rounded-full">
                         <i class="ph ph-arrow-right mr-1"></i> -
                     </span>
                 </div>
-                <div>
-                    <h3 class="text-gray-500 text-xs font-bold tracking-wider uppercase mb-1">Toplam Tutar</h3>
-                    <p id="kpi-gelir-val" class="text-3xl font-semibold text-gray-900 tracking-tight">₺0</p>
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-xs font-semibold tracking-[0.28em] uppercase text-white/70">Toplam Tutar</h3>
+                    <p id="kpi-gelir-val" class="text-3xl font-semibold tracking-tight drop-shadow-sm">₺0</p>
                 </div>
             </div>
 
             <!-- Card 2 -->
-            <div id="kpi-unite-card" class="bg-white p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-help">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-gray-50 rounded-full">
-                        <i class="ph ph-package text-xl text-gray-700"></i>
+            <div id="kpi-unite-card" class="kpi-card bg-gradient-to-br from-[#ff9de5] via-[#ff6b9a] to-[#ff8dc7] p-6 lg:p-7 text-white cursor-help relative overflow-hidden">
+                <span class="absolute -bottom-20 -left-10 w-44 h-44 rounded-full bg-white/20 blur-3xl"></span>
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <div class="p-3 bg-white/15 rounded-2xl">
+                        <i class="ph ph-package text-2xl"></i>
                     </div>
-                    <span id="kpi-unite-pct" class="flex items-center text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                    <span id="kpi-unite-pct" class="flex items-center text-xs font-medium bg-white/15 px-3 py-1 rounded-full">
                         <i class="ph ph-arrow-right mr-1"></i> -
                     </span>
                 </div>
-                <div>
-                    <h3 class="text-gray-500 text-xs font-bold tracking-wider uppercase mb-1">Satılan Ünite</h3>
-                    <p id="kpi-unite-val" class="text-3xl font-semibold text-gray-900 tracking-tight">0 <span class="text-lg font-normal text-gray-400">Adet</span></p>
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-xs font-semibold tracking-[0.28em] uppercase text-white/70">Satılan Ünite</h3>
+                    <p id="kpi-unite-val" class="text-3xl font-semibold tracking-tight drop-shadow-sm">0 <span class="text-lg font-normal text-white/70">Adet</span></p>
                 </div>
             </div>
 
             <!-- Card 3 -->
-            <div id="kpi-ort-card" class="bg-white p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-help">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-gray-50 rounded-full">
-                        <i class="ph ph-shopping-cart text-xl text-gray-700"></i>
+            <div id="kpi-ort-card" class="kpi-card bg-gradient-to-br from-[#5bd6ff] via-[#6c63ff] to-[#b178ff] p-6 lg:p-7 text-white cursor-help relative overflow-hidden">
+                <span class="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-white/20 blur-3xl"></span>
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <div class="p-3 bg-white/15 rounded-2xl">
+                        <i class="ph ph-shopping-cart text-2xl"></i>
                     </div>
-                    <span id="kpi-ort-pct" class="flex items-center text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                    <span id="kpi-ort-pct" class="flex items-center text-xs font-medium bg-white/15 px-3 py-1 rounded-full">
                         <i class="ph ph-arrow-right mr-1"></i> -
                     </span>
                 </div>
-                <div>
-                    <h3 class="text-gray-500 text-xs font-bold tracking-wider uppercase mb-1">Ort. Sipariş Değeri</h3>
-                    <p id="kpi-ort-val" class="text-3xl font-semibold text-gray-900 tracking-tight">₺0</p>
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-xs font-semibold tracking-[0.28em] uppercase text-white/70">Ort. Sipariş Değeri</h3>
+                    <p id="kpi-ort-val" class="text-3xl font-semibold tracking-tight drop-shadow-sm">₺0</p>
                 </div>
             </div>
 
             <!-- Card 4 (YENİ: Ort. BK) -->
-            <div id="kpi-bk-card" class="bg-white p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-help">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-gray-50 rounded-full">
-                        <i class="ph ph-percent text-xl text-gray-700"></i>
+            <div id="kpi-bk-card" class="kpi-card bg-gradient-to-br from-[#f9a8d4] via-[#c084fc] to-[#818cf8] p-6 lg:p-7 text-white cursor-help relative overflow-hidden">
+                <span class="absolute top-1/2 -right-12 w-36 h-36 rounded-full bg-white/25 blur-3xl"></span>
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <div class="p-3 bg-white/15 rounded-2xl">
+                        <i class="ph ph-percent text-2xl"></i>
                     </div>
-                    <span id="kpi-bk-pct" class="flex items-center text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                    <span id="kpi-bk-pct" class="flex items-center text-xs font-medium bg-white/15 px-3 py-1 rounded-full">
                         <i class="ph ph-arrow-right mr-1"></i> -
                     </span>
                 </div>
-                <div>
-                    <h3 class="text-gray-500 text-xs font-bold tracking-wider uppercase mb-1">Ort. BK</h3>
-                    <p id="kpi-bk-val" class="text-3xl font-semibold text-gray-900 tracking-tight">%0.0</p>
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-xs font-semibold tracking-[0.28em] uppercase text-white/70">Ort. BK</h3>
+                    <p id="kpi-bk-val" class="text-3xl font-semibold tracking-tight drop-shadow-sm">%0.0</p>
                 </div>
             </div>
 
@@ -185,13 +295,15 @@
         <!-- Main Charts Layout (GÜNCELLENDİ: Tam genişlikte) -->
 
         <!-- Left Column: Sales Trend -->
-        <div class="bg-white p-8 border border-gray-100 shadow-sm">
+        <div class="glass-card p-8 lg:p-10 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-gray-800 tracking-tight flex items-center">
-                    <span class="w-2 h-2 bg-brand mr-3 rounded-full"></span>
+                <h2 class="text-lg lg:text-xl font-semibold text-[#2c255d] tracking-tight flex items-center gap-3">
+                    <span class="w-10 h-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-brand via-brand-light to-brand-accent text-white text-base shadow-lg">
+                        <i class="ph ph-trend-up"></i>
+                    </span>
                     Aylık Satış Trendi (Sadece Mutfak & Ek Sipariş)
                 </h2>
-                <select class="text-sm border-none text-gray-500 bg-gray-50 rounded px-2 py-1 cursor-pointer focus:ring-1 focus:ring-brand outline-none">
+                <select class="text-sm border-none text-[#5e5a84] bg-white/70 rounded-2xl px-3 py-2 cursor-pointer focus:ring-2 focus:ring-brand/60 outline-none shadow-inner">
                     <option>Tüm Yıl</option>
                 </select>
             </div>
@@ -201,9 +313,11 @@
         </div>
 
         <!-- Bottom Section: City Sales (Yukarı taşındı) -->
-        <div class="bg-white p-8 border border-gray-100 shadow-sm">
-            <h2 class="text-lg font-semibold text-gray-800 mb-6 tracking-tight flex items-center">
-                <span class="w-2 h-2 bg-brand-dark mr-3 rounded-full"></span>
+        <div class="glass-card p-8 lg:p-10 shadow-2xl">
+            <h2 class="text-lg lg:text-xl font-semibold text-[#2c255d] mb-6 tracking-tight flex items-center gap-3">
+                <span class="w-10 h-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-brand-dark via-brand to-brand-accent text-white text-base shadow-lg">
+                    <i class="ph ph-map-pin"></i>
+                </span>
                 Satış Noktası Dağılımı (Adet)
             </h2>
             <div class="relative h-[250px] w-full">
@@ -215,9 +329,11 @@
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Model Ciro -->
-            <div class="bg-white p-8 border border-gray-100 shadow-sm h-[400px] flex flex-col">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 tracking-tight flex items-center">
-                    <span class="w-2 h-2 bg-brand-light mr-3 rounded-full"></span>
+            <div class="glass-card p-8 lg:p-9 h-[400px] flex flex-col">
+                <h2 class="text-lg font-semibold text-[#2c255d] mb-4 tracking-tight flex items-center gap-3">
+                    <span class="w-9 h-9 flex items-center justify-center rounded-2xl bg-gradient-to-br from-brand-light to-brand-accent text-white text-sm shadow-lg">
+                        <i class="ph ph-chart-pie"></i>
+                    </span>
                     Modele Göre Ciro (TL)
                 </h2>
                 <div class="relative flex-1">
@@ -226,9 +342,11 @@
             </div>
 
             <!-- Model Adet -->
-            <div class="bg-white p-8 border border-gray-100 shadow-sm h-[400px] flex flex-col">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 tracking-tight flex items-center">
-                    <span class="w-2 h-2 bg-brand-light mr-3 rounded-full"></span>
+            <div class="glass-card p-8 lg:p-9 h-[400px] flex flex-col">
+                <h2 class="text-lg font-semibold text-[#2c255d] mb-4 tracking-tight flex items-center gap-3">
+                    <span class="w-9 h-9 flex items-center justify-center rounded-2xl bg-gradient-to-br from-brand-light to-brand-accent text-white text-sm shadow-lg">
+                        <i class="ph ph-chart-pie-slice"></i>
+                    </span>
                     Modele Göre Satış (Adet)
                 </h2>
                 <div class="relative flex-1">
@@ -237,9 +355,11 @@
             </div>
 
             <!-- Malzeme Ciro -->
-            <div class="bg-white p-8 border border-gray-100 shadow-sm h-[400px] flex flex-col">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 tracking-tight flex items-center">
-                    <span class="w-2 h-2 bg-gray-400 mr-3 rounded-full"></span>
+            <div class="glass-card p-8 lg:p-9 h-[400px] flex flex-col">
+                <h2 class="text-lg font-semibold text-[#2c255d] mb-4 tracking-tight flex items-center gap-3">
+                    <span class="w-9 h-9 flex items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-brand-accent text-white text-sm shadow-lg">
+                        <i class="ph ph-flower-lotus"></i>
+                    </span>
                     Malzemeye Göre Ciro (TL)
                 </h2>
                 <div class="relative flex-1">
@@ -248,9 +368,11 @@
             </div>
 
             <!-- Malzeme Adet -->
-            <div class="bg-white p-8 border border-gray-100 shadow-sm h-[400px] flex flex-col">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 tracking-tight flex items-center">
-                    <span class="w-2 h-2 bg-gray-400 mr-3 rounded-full"></span>
+            <div class="glass-card p-8 lg:p-9 h-[400px] flex flex-col">
+                <h2 class="text-lg font-semibold text-[#2c255d] mb-4 tracking-tight flex items-center gap-3">
+                    <span class="w-9 h-9 flex items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-brand-accent text-white text-sm shadow-lg">
+                        <i class="ph ph-flower-tulip"></i>
+                    </span>
                     Malzemeye Göre Satış (Adet)
                 </h2>
                 <div class="relative flex-1">
@@ -263,7 +385,7 @@
 
     </main>
 
-    <footer class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-400 text-xs">
+    <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-[#6e6a96] text-xs">
         <p>&copy; 2025 Mutfak Markası A.Ş. Tüm hakları saklıdır. Gizli Kurumsal Veri.</p>
     </footer>
 
@@ -274,12 +396,14 @@
         (() => {
             // Global Chart Settings
             Chart.defaults.font.family = "'Inter', sans-serif";
-            Chart.defaults.color = '#6b7280';
-            Chart.defaults.scale.grid.color = '#f3f4f6';
+            Chart.defaults.color = '#6d6c94';
+            Chart.defaults.scale.grid.color = '#e6e6ff';
 
-            const BRAND_COLOR = '#5F6F52'; // Zeytin Yeşili
-            const BRAND_LIGHT = '#A9B388';
-            const BRAND_DARK = '#3E4A35';
+            const BRAND_COLOR = '#6C63FF';
+            const BRAND_LIGHT = '#8F7BFF';
+            const BRAND_DARK = '#4D46B5';
+            const BRAND_ACCENT = '#FF6B9A';
+            const BRAND_GLOW = '#F4ECFF';
 
             // Global Chart Instances
             let trendChart, cityChart;
@@ -320,13 +444,13 @@
                     const breakdown = kpiBreakdowns[cardId];
                     if (!breakdown || Object.keys(breakdown).length === 0) return;
 
-                    let tooltipHtml = `<h4 class="font-bold mb-2 border-b border-gray-600 pb-1">${title}</h4><ul class="space-y-1">`;
+                    let tooltipHtml = `<h4 class="text-[13px] font-semibold mb-2 text-white border-b border-white/10 pb-2">${title}</h4><ul class="space-y-1 text-xs">`;
                     const sortedBreakdown = Object.entries(breakdown).sort(
                         ([, a], [, b]) => b - a
                     );
 
                     for (const [key, value] of sortedBreakdown) {
-                        tooltipHtml += `<li class="flex justify-between items-center"><span class="text-gray-300 mr-4">${key}:</span> <span class="font-medium">${formatter(
+                        tooltipHtml += `<li class="flex justify-between items-center text-white/80"><span class="text-white/60 mr-4">${key}:</span> <span class="font-semibold text-white">${formatter(
                     value
                 )}</span></li>`;
                     }
@@ -422,27 +546,59 @@
                 }
             }
 
-            function getSelectedMonths() {
-                const monthSelect = document.getElementById('monthFilter');
-                if (!monthSelect) {
-                    return 'all';
-                }
+            function getMonthCheckboxes() {
+                return document.querySelectorAll('.month-filter-option');
+            }
 
-                const selectedValues = Array.from(monthSelect.selectedOptions).map(
-                    (option) => option.value
+            function setMonthDropdownState(isOpen) {
+                const dropdown = document.getElementById('monthFilterDropdown');
+                const toggle = document.getElementById('monthFilterToggle');
+                const caret = document.getElementById('monthFilterCaret');
+
+                if (!dropdown || !toggle) return;
+
+                if (isOpen) {
+                    dropdown.classList.remove('hidden');
+                    toggle.setAttribute('aria-expanded', 'true');
+                    if (caret) caret.classList.add('rotate-180');
+                } else {
+                    dropdown.classList.add('hidden');
+                    toggle.setAttribute('aria-expanded', 'false');
+                    if (caret) caret.classList.remove('rotate-180');
+                }
+            }
+
+            function updateMonthFilterLabel() {
+                const labelEl = document.getElementById('monthFilterLabel');
+                if (!labelEl) return;
+
+                const checkedOptions = Array.from(getMonthCheckboxes()).filter(
+                    (checkbox) => checkbox.checked
                 );
 
-                if (selectedValues.length === 0) {
-                    const allOption = Array.from(monthSelect.options).find(
-                        (option) => option.value === 'all'
-                    );
-                    if (allOption) {
-                        allOption.selected = true;
-                    }
-                    return 'all';
+                if (
+                    checkedOptions.length === 0 ||
+                    checkedOptions.some((checkbox) => checkbox.value === 'all')
+                ) {
+                    labelEl.textContent = 'Tüm Yıl';
+                    return;
                 }
 
-                if (selectedValues.includes('all')) {
+                if (checkedOptions.length === 1) {
+                    const singleValue = Number(checkedOptions[0].value);
+                    labelEl.textContent = monthNames[singleValue] || '1 Ay';
+                    return;
+                }
+
+                labelEl.textContent = `${checkedOptions.length} Ay`;
+            }
+
+            function getSelectedMonths() {
+                const selectedValues = Array.from(getMonthCheckboxes())
+                    .filter((checkbox) => checkbox.checked)
+                    .map((checkbox) => checkbox.value);
+
+                if (selectedValues.length === 0 || selectedValues.includes('all')) {
                     return 'all';
                 }
 
@@ -450,21 +606,40 @@
             }
 
             function handleMonthFilterChange(event) {
-                const select = event.target;
-                const selectedValues = Array.from(select.selectedOptions).map(
-                    (option) => option.value
-                );
-
-                if (selectedValues.includes('all') && selectedValues.length > 1) {
-                    Array.from(select.options).forEach((option) => {
-                        option.selected = option.value === 'all';
-                    });
-                } else if (selectedValues.length === 0) {
-                    Array.from(select.options).forEach((option) => {
-                        option.selected = option.value === 'all';
-                    });
+                const checkboxes = Array.from(getMonthCheckboxes());
+                if (checkboxes.length === 0) {
+                    masterRender();
+                    return;
                 }
 
+                const changed = event.target;
+                const allCheckbox = checkboxes.find(
+                    (checkbox) => checkbox.value === 'all'
+                );
+
+                if (changed.value === 'all') {
+                    if (changed.checked) {
+                        checkboxes
+                            .filter((checkbox) => checkbox.value !== 'all')
+                            .forEach((checkbox) => (checkbox.checked = false));
+                    } else {
+                        changed.checked = true;
+                    }
+                } else {
+                    if (changed.checked && allCheckbox) {
+                        allCheckbox.checked = false;
+                    }
+
+                    const hasMonthSelected = checkboxes.some(
+                        (checkbox) => checkbox.value !== 'all' && checkbox.checked
+                    );
+
+                    if (!hasMonthSelected && allCheckbox) {
+                        allCheckbox.checked = true;
+                    }
+                }
+
+                updateMonthFilterLabel();
                 masterRender();
             }
 
@@ -879,12 +1054,12 @@
             // Pie Chart Renk paleti
             const PIE_COLORS = [
                 BRAND_COLOR,
+                BRAND_ACCENT,
                 BRAND_LIGHT,
-                BRAND_DARK,
-                '#6b7280',
-                '#9ca3af',
-                '#d1d5db',
-                '#e5e7eb'
+                '#A5A3FF',
+                '#FF9AD3',
+                '#C7C4FF',
+                '#FFE0F0'
             ];
 
             function generatePieColors(count) {
@@ -917,8 +1092,12 @@
                                 }
                             },
                             tooltip: {
-                                backgroundColor: '#374151',
-                                padding: 10,
+                                backgroundColor: 'rgba(31, 27, 63, 0.9)',
+                                padding: 12,
+                                titleColor: '#F8F7FF',
+                                bodyColor: '#E6E4FF',
+                                borderColor: 'rgba(255, 255, 255, 0.12)',
+                                borderWidth: 1,
                                 callbacks: {
                                     label: formatterCallback // Bu, update'de dinamik olarak ayarlanacak
                                 }
@@ -933,8 +1112,8 @@
                 // 1. Trend Chart (Area)
                 const ctxTrend = document.getElementById('trendChart').getContext('2d');
                 const gradientTrend = ctxTrend.createLinearGradient(0, 0, 0, 400);
-                gradientTrend.addColorStop(0, 'rgba(95, 111, 82, 0.2)');
-                gradientTrend.addColorStop(1, 'rgba(95, 111, 82, 0.0)');
+                gradientTrend.addColorStop(0, 'rgba(108, 99, 255, 0.32)');
+                gradientTrend.addColorStop(1, 'rgba(255, 107, 154, 0)');
 
                 trendChart = new Chart(ctxTrend, {
                     type: 'line',
@@ -963,12 +1142,12 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                                backgroundColor: '#fff',
-                                titleColor: '#111',
-                                bodyColor: '#555',
-                                borderColor: '#e5e7eb',
+                                backgroundColor: 'rgba(31, 27, 63, 0.95)',
+                                titleColor: '#F8F7FF',
+                                bodyColor: '#E6E4FF',
+                                borderColor: 'rgba(255, 255, 255, 0.15)',
                                 borderWidth: 1,
-                                padding: 10,
+                                padding: 12,
                                 displayColors: false,
                                 callbacks: {
                                     label: (context) => formatCurrency(context.parsed.y)
@@ -1002,9 +1181,10 @@
                             {
                                 label: 'Satış Adedi',
                                 data: [],
-                                backgroundColor: BRAND_COLOR,
-                                borderRadius: 4,
-                                barThickness: 40
+                                backgroundColor: BRAND_ACCENT,
+                                borderRadius: 12,
+                                barThickness: 36,
+                                borderSkipped: false
                             }
                         ]
                     },
@@ -1014,9 +1194,13 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                                backgroundColor: '#374151',
-                                padding: 10,
-                                cornerRadius: 4,
+                                backgroundColor: 'rgba(31, 27, 63, 0.9)',
+                                padding: 12,
+                                cornerRadius: 12,
+                                titleColor: '#F8F7FF',
+                                bodyColor: '#E6E4FF',
+                                borderColor: 'rgba(255, 255, 255, 0.12)',
+                                borderWidth: 1,
                                 callbacks: {
                                     label: (context) =>
                                         formatNumber(context.raw) + ' Adet'
@@ -1098,9 +1282,40 @@
                     .addEventListener('click', handleFileUpload);
 
                 // Filtreler
-                document
-                    .getElementById('monthFilter')
-                    .addEventListener('change', handleMonthFilterChange);
+                const monthFilterWrapper = document.getElementById('monthFilterWrapper');
+                const monthFilterToggle = document.getElementById('monthFilterToggle');
+                const monthFilterDropdown = document.getElementById('monthFilterDropdown');
+
+                if (monthFilterToggle && monthFilterDropdown && monthFilterWrapper) {
+                    monthFilterToggle.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        const shouldOpen = monthFilterDropdown.classList.contains('hidden');
+                        setMonthDropdownState(shouldOpen);
+                    });
+
+                    monthFilterDropdown.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                    });
+
+                    document.addEventListener('click', (event) => {
+                        if (!monthFilterWrapper.contains(event.target)) {
+                            setMonthDropdownState(false);
+                        }
+                    });
+
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            setMonthDropdownState(false);
+                        }
+                    });
+                }
+
+                getMonthCheckboxes().forEach((checkbox) => {
+                    checkbox.addEventListener('change', handleMonthFilterChange);
+                });
+
+                updateMonthFilterLabel();
+
                 document
                     .getElementById('channelFilter')
                     .addEventListener('change', masterRender);
