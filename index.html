@@ -241,15 +241,6 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.85);
         }
 
-        .floating-select[multiple] {
-            min-height: 3.5rem;
-            padding: 0.75rem;
-        }
-
-        .floating-select option {
-            color: var(--brand-ink);
-        }
-
         .floating-button {
             border-radius: 16px;
             background: linear-gradient(135deg, #818dff, #ffa7d9);
@@ -345,23 +336,12 @@
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div class="flex flex-col gap-2 text-sm text-[rgba(82,84,122,0.75)] w-full sm:w-auto min-w-[200px]">
-                        <label for="monthFilter" class="text-xs uppercase tracking-wide text-[rgba(123,127,167,0.8)]">Ay Filtresi</label>
-                        <select id="monthFilter" multiple size="4" class="floating-select text-sm cursor-pointer focus:ring-2 focus:ring-[#aab6ff] focus:outline-none w-full">
-                            <option value="0">Ocak</option>
-                            <option value="1">Şubat</option>
-                            <option value="2">Mart</option>
-                            <option value="3">Nisan</option>
-                            <option value="4">Mayıs</option>
-                            <option value="5">Haziran</option>
-                            <option value="6">Temmuz</option>
-                            <option value="7">Ağustos</option>
-                            <option value="8">Eylül</option>
-                            <option value="9">Ekim</option>
-                            <option value="10">Kasım</option>
-                            <option value="11">Aralık</option>
+                    <div class="flex items-center gap-3">
+                        <select id="channelFilter" class="floating-select text-sm px-3 py-2 cursor-pointer focus:ring-2 focus:ring-[#aab6ff] focus:outline-none">
+                            <option value="all">Tüm Kanallar</option>
+                            <option value="Bayi">Bayi</option>
+                            <option value="İntema">İntema</option>
                         </select>
-                        <span class="text-xs text-[rgba(82,84,122,0.65)]">Birden fazla ay seçmek için Ctrl (Cmd) tuşunu kullanın.</span>
                     </div>
 
                     <div class="flex items-center gap-3 sm:border-l sm:border-white/50 sm:pl-4 sm:ml-2">
@@ -674,9 +654,6 @@
                     // Başlık satırını atla ve ham veriyi kaydet
                     rawExcelData = json_data.slice(1);
 
-                    // Ay filtresini güncelle
-                    populateMonthFilter({ resetSelection: true });
-
                     // Dashboard'u ilk kez işle ve render et
                     masterRender();
 
@@ -700,12 +677,12 @@
                     return;
                 }
 
-                const selectedMonths = getSelectedMonths();
+                const selectedChannel = document.getElementById('channelFilter').value;
 
                 // Ham veriyi filtrelere göre işle
                 const processedData = processData(
                     rawExcelData,
-                    selectedMonths
+                    selectedChannel
                 );
 
                 // İşlenmiş veriyle dashboard'u güncelle
@@ -744,123 +721,51 @@
                 return null; // Geçersiz format
             }
 
-            function getSelectedMonths() {
-                const monthSelect = document.getElementById('monthFilter');
-                if (!monthSelect) return [];
-
-                return Array.from(monthSelect.selectedOptions)
-                    .map((option) => Number.parseInt(option.value, 10))
-                    .filter((value) => Number.isInteger(value) && value >= 0 && value <= 11)
-                    .sort((a, b) => a - b);
-            }
-
-            function populateMonthFilter({ resetSelection = false } = {}) {
-                const monthSelect = document.getElementById('monthFilter');
-                if (!monthSelect) return;
-
-                const availableMonths = new Set();
-
-                rawExcelData.forEach((row) => {
-                    if (!row) return;
-                    const date = parseDate(row[31]);
-                    if (!(date instanceof Date) || isNaN(date.getTime())) return;
-
-                    const month = date.getMonth();
-                    if (month >= 0 && month < 12) {
-                        availableMonths.add(month);
-                    }
-                });
-
-                Array.from(monthSelect.options).forEach((option) => {
-                    const monthValue = Number.parseInt(option.value, 10);
-                    const isAvailable = availableMonths.has(monthValue);
-                    option.disabled = !isAvailable;
-
-                    if (resetSelection) {
-                        option.selected = false;
-                    } else if (!isAvailable && option.selected) {
-                        option.selected = false;
-                    }
-                });
-            }
-
             /**
              * Yüklenen veriyi işler ve dashboard için hazırlar.
              * VERİ EŞLEŞTİRME (VARSAYIMLAR):
              * A (0): Satış Noktası
              * E (4): Tür (FİLTRE: "Mutfak" veya "Ek Sipariş")
-             * F (5): Kanal
+             * F (5): Kanal (FİLTRE: "Bayi" veya "İntema")
              * K (10): Adet
              * P (15): Sipariş No
              * T (19): Malzeme
              * V (21): Kapak Model
-             * AF (31): Fatura Tarihi (Tarih)
+             * AG (32): Fatura Tarihi (Tarih)
              * AI (34): Toplam Tutar (Gelir)
              * AK (36): BK (Brüt Kâr)
              * AP (41): Maliyet (Cost)
              */
-            function processData(allRows, monthFilter = []) {
-                const monthFilterArray = Array.isArray(monthFilter)
-                    ? Array.from(
-                          new Set(
-                              monthFilter
-                                  .map((value) =>
-                                      Number.isInteger(value)
-                                          ? value
-                                          : Number.parseInt(value, 10)
-                                  )
-                                  .filter(
-                                      (value) =>
-                                          Number.isInteger(value) && value >= 0 && value <= 11
-                                  )
-                          )
-                      )
-                    : [];
-                if (monthFilterArray.length > 1) {
-                    monthFilterArray.sort((a, b) => a - b);
-                }
-                const hasMonthFilter = monthFilterArray.length > 0;
-                const monthFilterSet = new Set(monthFilterArray);
-
+            function processData(allRows, channelFilter) {
                 // 1. FİLTRELEME AŞAMASI
-                const rows = allRows
-                    .map((row) => {
-                        if (!row) return null;
+                const rows = allRows.filter((row) => {
+                    if (!row) return false;
 
-                        // Temel Filtre: Tür (E sütunu, index 4)
-                        const type = row[4];
-                        if (type !== 'Mutfak' && type !== 'Ek Sipariş') {
-                            return null;
+                    // Temel Filtre: Tür (E sütunu, index 4)
+                    const type = row[4];
+                    if (type !== 'Mutfak' && type !== 'Ek Sipariş') {
+                        return false;
+                    }
+
+                    // Kanal Filtresi (F sütunu, index 5)
+                    // DÜZELTME: trim() hatasını önlemek için string'e çevir ve null kontrolü yap
+                    const channel = (row[5] || '').toString().trim();
+                    if (channelFilter !== 'all') {
+                        if (channel !== channelFilter) {
+                            return false;
                         }
+                    }
+                    
+                    // Filtrelenmiş satıra temizlenmiş kanalı ekle (sonraki adım için)
+                    row.cleanedChannel = channel; 
 
-                        const date = parseDate(row[31]); // AF
-                        if (!date) {
-                            return null;
-                        }
-
-                        if (hasMonthFilter && !monthFilterSet.has(date.getMonth())) {
-                            return null;
-                        }
-
-                        const channelRaw = (row[5] ?? '').toString().trim();
-                        const modelRaw = (row[21] ?? '').toString().trim();
-                        const materialRaw = (row[19] ?? '').toString().trim();
-                        const cityRaw = (row[0] ?? '').toString().trim();
-
-                        row.cleanedChannel = channelRaw || 'Bilinmiyor';
-                        row.cleanedModel = modelRaw || 'Bilinmiyor';
-                        row.cleanedMaterial = materialRaw || 'Bilinmiyor';
-                        row.cleanedCity = cityRaw || 'Bilinmiyor';
-                        row.parsedDate = date;
-
-                        return row;
-                    })
-                    .filter(Boolean);
+                    return true; // Tüm filtrelerden geçti
+                });
 
                 if (rows.length === 0) {
                     console.warn('Filtrelerle eşleşen veri bulunamadı.');
                     // Grafikleri ve KPI'ları sıfırla
-                    return getEmptyDataStructure(hasMonthFilter ? monthFilterArray : undefined);
+                    return getEmptyDataStructure();
                 }
 
                 // 2. AGREGASYON AŞAMASI
@@ -896,12 +801,12 @@
                 rows.forEach((row) => {
                     const revenue = parseFloat(row[34]) || 0; // AI
                     const units = parseInt(row[10]) || 0; // K
-                    const date = row.parsedDate || parseDate(row[31]); // AF
+                    const date = parseDate(row[32]); // AG
                     const orderId = row[15]; // P
-                    const model = row.cleanedModel || 'Bilinmiyor'; // V
-                    const material = row.cleanedMaterial || 'Bilinmiyor'; // T
-                    const city = row.cleanedCity || 'Bilinmiyor'; // A (Satış Noktası)
-                    const channel = row.cleanedChannel || 'Bilinmiyor'; // F
+                    const model = row[21] || 'Bilinmiyor'; // V
+                    const material = row[19] || 'Bilinmiyor'; // T
+                    const city = row[0] || 'Bilinmiyor'; // A (Satış Noktası)
+                    const channel = row.cleanedChannel; // F (Filtrelenmiş)
                     const cost = parseFloat(row[41]) || 0; // AP
 
                     // 1. KPI Hesaplamaları
@@ -922,11 +827,9 @@
                         (avgOrderValueBreakdown_Units[channel] || 0) + units;
 
                     // 2. Aylık Satış (Trend)
-                    if (date instanceof Date && !isNaN(date.getTime())) {
+                    if (date) {
                         const month = date.getMonth(); // 0 = Ocak, 11 = Aralık
-                        if (month >= 0 && month < 12) {
-                            monthlySales[month] += revenue;
-                        }
+                        monthlySales[month] += revenue;
                     }
 
                     // 3. Satış Noktası (Adet ve Tutar)
@@ -998,13 +901,6 @@
                 const topMaterialRevenue = getTopNData(materialRevenue, 5);
                 const topMaterialUnits = getTopNData(materialUnits, 5);
 
-                const trendLabels = hasMonthFilter
-                    ? monthFilterArray.map((monthIndex) => monthNames[monthIndex] || '')
-                    : monthNames;
-                const trendSeries = hasMonthFilter
-                    ? monthFilterArray.map((monthIndex) => monthlySales[monthIndex] || 0)
-                    : monthlySales;
-
                 return {
                     kpis: {
                         totalRevenue,
@@ -1017,8 +913,8 @@
                         avgGrossProfitBreakdown: avgGrossProfitTooltipData
                     },
                     trendData: {
-                        labels: trendLabels,
-                        data: trendSeries
+                        labels: monthNames,
+                        data: monthlySales
                     },
                     cityData: {
                         labels: Object.keys(topCitiesByUnit),
@@ -1045,22 +941,8 @@
             }
 
             // Boş veri döndüren helper (filtre sonucu boşsa)
-            function getEmptyDataStructure(filteredMonths) {
+            function getEmptyDataStructure() {
                 const empty = { labels: [], data: [] };
-                const filteredMonthArray = Array.isArray(filteredMonths)
-                    ? filteredMonths.filter(
-                          (value) => Number.isInteger(value) && value >= 0 && value <= 11
-                      )
-                    : [];
-                const hasFilteredMonths = filteredMonthArray.length > 0;
-                const trendLabels = hasFilteredMonths
-                    ? filteredMonthArray.map(
-                          (monthIndex) => monthNames[monthIndex] || ''
-                      )
-                    : monthNames;
-                const trendValues = hasFilteredMonths
-                    ? filteredMonthArray.map(() => 0)
-                    : new Array(12).fill(0);
                 return {
                     kpis: {
                         totalRevenue: 0,
@@ -1072,7 +954,7 @@
                         avgOrderValueBreakdown: {},
                         avgGrossProfitBreakdown: {}
                     },
-                    trendData: { labels: trendLabels, data: trendValues },
+                    trendData: { labels: monthNames, data: new Array(12).fill(0) },
                     cityData: { labels: [], dataUnits: [], dataRevenue: [] }, // Düzeltilmiş
                     modelRevenueData: empty,
                     modelUnitData: empty,
@@ -1095,9 +977,7 @@
 
                 if (formatter) {
                     chart.options.plugins.tooltip.callbacks.label = (context) => {
-                        const label = (context.label || 'Bilinmiyor')
-                            .toString()
-                            .trim() || 'Bilinmiyor';
+                        const label = context.label || '';
                         const value = context.raw || 0;
                         const sum = context.chart.data.datasets[0].data.reduce(
                             (a, b) => a + b,
@@ -1449,9 +1329,6 @@
                 // Mock grafikler
                 initializeChartsWithMockData();
 
-                // Ay filtresini başlangıçta temizle/güncelle
-                populateMonthFilter({ resetSelection: true });
-
                 // File upload
                 document
                     .getElementById('uploadButton')
@@ -1459,7 +1336,7 @@
 
                 // Filtreler
                 document
-                    .getElementById('monthFilter')
+                    .getElementById('channelFilter')
                     .addEventListener('change', masterRender);
 
                 // KPI tooltip’leri
